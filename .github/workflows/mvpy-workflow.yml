@@ -61,7 +61,8 @@ jobs:
       
     - name: Test with pytest
       run: |
-        pytest -q ./tests/test_mvpy_rest_server.py
+        # pytest -q ./tests/test_mvpy_rest_server.py
+        pytest
 
   build:
     needs: create-virtualenv
