@@ -73,10 +73,7 @@ jobs:
     - uses: actions/setup-python@v2
     - uses: syphar/restore-virtualenv@v1
       id: cache-virtualenv
-      
-    - name: build with pyinstaller
-      run: |
-        pyinstaller --log-level=DEBUG mvpy_rest_server.py 2> build.txt
+    
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -86,8 +83,41 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
         body: |
-          Changes in this Release
-          - First Change
-          - Second Change
+          Test Release v1.0.0
         draft: false
         prerelease: false
+        
+    - name: Output Release URL File
+      run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+    - name: Save Release URL File for publish
+      uses: actions/upload-artifact@v1
+      with:
+        name: release_url
+        path: release_url.txt
+    
+    - name: build with pyinstaller
+      run: |
+        pyinstaller --log-level=DEBUG mvpy_rest_server.py 2> build.txt
+    - name: Load Release URL File from release job
+      uses: actions/download-artifact@v1
+      with:
+        name: release_url
+    - name: Get Release File Name & Upload URL
+      id: get_release_info
+      shell: bash
+      run: |
+        value=`cat release_url/release_url.txt`
+        echo ::set-output name=upload_url::$value
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+        asset_path: ./dist/mvpy_rest_server
+        asset_name: mvpy_rest_server
+      
+        
+    
+
